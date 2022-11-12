@@ -23,4 +23,8 @@ platform :ios do
     upload_to_testflight # action
     slack(message: "Successfully distributed a new beta build") # action
   end
+
+  lane :custom_gradle_task do
+    gradle(task: "hello")
+  end
 end
