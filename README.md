@@ -10,8 +10,8 @@
 
 ### [Capitolo 5 - Automazione del processo di sviluppo](https://github.com/paganellif/DevOps-per-applicazioni-mobile-un-caso-di-studio-industriale/tree/5-automazione-del-processo-di-sviluppo)
 
-### Capitolo 6 - Sviluppo applicazione MaggioliEbook
+### Capitolo 6 - Sviluppo applicazione MaggioliEbook
 
-### Capitolo 7 - Risultati raggiunti
+### Capitolo 7 - Risultati raggiunti 
 
 ### Capitolo 8 - Conclusioni
