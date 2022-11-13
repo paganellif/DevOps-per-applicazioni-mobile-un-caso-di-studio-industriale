@@ -8,7 +8,7 @@
 
 ### Capitolo 4 - Caso di studio: applicazione MaggioliEbook
 
-### [Capitolo 5 - Automazione del processo di sviluppo](https://github.com/paganellif/DevOps-per-applicazioni-mobile-un-caso-di-studio-industriale/tree/4-automazione-del-processo-di-sviluppo)
+### [Capitolo 5 - Automazione del processo di sviluppo](https://github.com/paganellif/DevOps-per-applicazioni-mobile-un-caso-di-studio-industriale/tree/5-automazione-del-processo-di-sviluppo)
 
 ### Capitolo 6 - Sviluppo applicazione MaggioliEbook
 
