@@ -1,0 +1,60 @@
+#########################################
+# SHARED BUILD
+#########################################
+.shared:build:
+  stage: build:shared
+  extends: .base-android
+  script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - export FL_GRADLE_TASK="assemble"
+    - bundle exec fastlane run gradle
+    - export FL_GRADLE_TASK="podspec"
+    - bundle exec fastlane run gradle
+  artifacts:
+    name: shared-build
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/build
+  cache:
+    - key: "kotlin-cache"
+      paths:
+        - .konan
+      policy: pull-push
+    - key: "gradle-cache"
+      paths:
+        - .gradle
+      policy: pull-push
+
+#########################################
+# ANDROID BUILD
+#########################################
+.android:build:
+  stage: build
+  extends: .base-android
+  script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - export FL_GRADLE_TASK="assembleDebug"
+    - bundle exec fastlane run gradle
+  artifacts:
+    name: shared-build
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/build/outputs
+
+#########################################
+# IOS BUILD
+#########################################
+.ios:build:
+  stage: build
+  extends: [.base-android, .base-ios]
+  script:
+    - pod install
+    - bundle exec fastlane build_app
+  artifacts:
+    name: ios-build
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/*.dSYM.zip
+      - ${PROJECT_DIR}/*.ipa

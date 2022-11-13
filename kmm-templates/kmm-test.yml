@@ -1,0 +1,153 @@
+#########################################
+# BASE ANDROID UI TEST
+#########################################
+.base-android-ui-test:
+  stage: test:ui
+  extends: .base-android
+  resource_group: ui-test
+  variables:
+    SCREENGRAB_APP_APK_PATH: to_be_extended
+    SCREENGRAB_TESTS_APK_PATH: to_be_extended
+    AVD: to_be_extended
+    SCREENGRAB_DEVICE_TYPE: to_be_extended
+    SCREENGRAB_SKIP_OPEN_SUMMARY: "true"
+    SCREENGRAB_REINSTALL_APP: "true"
+  script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - nohup emulator -avd $AVD -no-window > nohup-$AVD.out 2>&1 &
+    - echo $! > pid-$AVD.txt
+    - sleep 10
+    - export FL_GRADLE_TASK="assembleAndroidTest"
+    - bundle exec fastlane run gradle
+    - bundle exec fastlane screengrab
+    - kill -9 `cat pid-$AVD.txt` || adb devices | grep emulator | cut -f1 | while read line; do adb -s $line emu kill; done || true
+  cache:
+    - key: "kotlin-cache"
+      paths:
+        - .konan
+      policy: pull
+    - key: "gradle-cache"
+      paths:
+        - .gradle
+      policy: pull
+
+#########################################
+# SHARED UNIT TEST
+#########################################
+.shared:unit:test:
+  stage: test:unit
+  extends: .base-android
+  script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - export FL_GRADLE_TASK="test"
+    - bundle exec fastlane run gradle
+  artifacts:
+    name: shared-test
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/build/reports/tests
+      - ${PROJECT_DIR}/build/test-results
+  cache:
+    - key: "kotlin-cache"
+      paths:
+        - .konan
+      policy: pull
+    - key: "gradle-cache"
+      paths:
+        - .gradle
+      policy: pull
+
+.android:unit:test:
+  stage: test:unit
+  extends: .base-android
+  variables:
+    UNIT_TEST_PACKAGE: to_be_extended
+  script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - nohup emulator -avd $AVD -no-window > nohup-$AVD.out 2>&1 &
+    - echo $! > pid-$AVD.txt
+    - sleep 10
+    - export FL_GRADLE_TASK="connectedDebugAndroidTest"
+    - export FL_GRADLE_FLAGS="-Pandroid.testInstrumentationRunnerArguments.package=$UNIT_TEST_PACKAGE"
+    - bundle exec fastlane run gradle
+    - kill -9 `cat pid-$AVD.txt` || adb devices | grep emulator | cut -f1 | while read line; do adb -s $line emu kill; done || true
+  artifacts:
+    name: android-unit-test
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/build/outputs/androidTest-results
+  cache:
+    - key: "kotlin-cache"
+      paths:
+        - .konan
+      policy: pull
+    - key: "gradle-cache"
+      paths:
+        - .gradle
+      policy: pull
+
+#########################################
+# ANDROID UI TEST + SCREENSHOT
+#########################################
+.android:ui:test:phone:
+  extends: .base-android-ui-test
+  variables:
+    AVD: to_be_extended
+    SCREENGRAB_DEVICE_TYPE: "phone"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: to_be_extended
+  artifacts:
+    name: android-ui-test-phone
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/fastlane/metadata/android
+
+.android:ui:test:seveninch:
+  extends: .base-android-ui-test
+  variables:
+    AVD: to_be_extended
+    SCREENGRAB_DEVICE_TYPE: "sevenInch"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: to_be_extended
+  artifacts:
+    name: android-ui-test-seven-inch
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/fastlane/metadata/android
+
+.android:ui:test:teninch:
+  extends: .base-android-ui-test
+  variables:
+    AVD: to_be_extended
+    SCREENGRAB_DEVICE_TYPE: "tenInch"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: to_be_extended
+  artifacts:
+    name: android-ui-test-ten-inch
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/fastlane/metadata/android
+
+#########################################
+# IOS UI TEST + SCREENSHOT
+#########################################
+.ios:ui:test:
+  extends: .base-ios
+  stage: test:ui
+  resource_group: ui-test
+  variables:
+    DEVICES: to_be_extended
+    SNAPSHOT_REINSTALL_APP: "true"
+  script:
+    #- fastlane testui #TODO ?
+    - export SNAPSHOT_HEADLESS="true"
+    - export SNAPSHOT_SKIP_OPEN_SUMMARY="true"
+    - export SNAPSHOT_EXECUTE_CONCURRENT_SIMULATORS="false"
+    - pod install
+    - IFS='@' bundle exec fastlane snapshot --devices="${DEVICES}"
+    #- bundle exec fastlane frameit
+  artifacts:
+    name: ios-ui-test
+    expire_in: 1 day
+    paths:
+      - ${PROJECT_DIR}/fastlane/screenshots

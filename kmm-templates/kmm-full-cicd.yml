@@ -1,0 +1,6 @@
+include:
+  - '/kmm-templates/kmm-base.yml'
+  - '/kmm-templates/kmm-pre.yml'
+  - '/kmm-templates/kmm-build.yml'
+  - '/kmm-templates/kmm-test.yml'
+  - '/kmm-templates/kmm-release.yml'

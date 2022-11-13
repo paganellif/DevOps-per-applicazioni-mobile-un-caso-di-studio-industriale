@@ -1,0 +1,97 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+variables:
+  # The GIT_DEPTH option makes the project clone process in each job a bit faster, pulling only the
+  # current commit, not the whole Git history.
+  GIT_DEPTH: "1"
+  # overlay2 filesystem for the Docker build, which is faster and less space consuming
+  DOCKER_DRIVER: overlay2
+  # Abilita debug gitlab-ci
+  #CI_DEBUG_TRACE: "true"
+  LC_ALL: en_US.UTF-8
+  LANG: en_US.UTF-8
+  SLACK_URL: $SLACK_IWH_URL
+  FL_SLACK_FAIL_ON_ERROR: "false"
+
+stages:
+  - build:shared
+  - build
+  - test:unit
+  - test:ui
+  - analysis
+  - analysis:sonar
+  - release
+
+#########################################
+# BASE ANDROID
+#########################################
+.base-android:
+  variables:
+    PROJECT_DIR: to_be_extended
+    JDK_VERSION: 17.0.3-zulu
+    GRADLE_USER_HOME: ${CI_PROJECT_DIR}/.gradle
+    #https://kotlinlang.org/docs/native-improving-compilation-time.html#general-recommendations
+    KONAN_DATA_DIR: ${CI_PROJECT_DIR}/.konan
+    FL_GRADLE_PATH: ${CI_PROJECT_DIR}/gradlew
+    RELEASE_KEY_JKS_PATH: to_be_extended
+    JK_PATH: to_be_extended
+    ANDROID_COMPILE_SDK: "28"
+    ANDROID_BUILD_TOOLS: "28.0.2"
+    ANDROID_SDK_TOOLS: "4333796"
+  before_script:
+    - sdk use java $JDK_VERSION
+    - echo "${RELEASE_KEY_JKS_HEX}" | xxd -r -p - > $RELEASE_KEY_JKS_PATH
+    - cp $JK_FILE $JK_PATH
+    - export PATH=$PATH:$ANDROID_SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS
+  cache:
+    - key: "kotlin-cache"
+      paths:
+        - .konan
+      policy: pull
+    - key: "gradle-cache"
+      paths:
+        - .gradle
+      policy: pull-push
+
+#########################################
+# BASE IOS
+#########################################
+.base-ios:
+  variables:
+    PROJECT_DIR: to_be_extended
+    GYM_WORKSPACE: to_be_extended
+    GYM_SCHEME: to_be_extended
+    APP_STORE_CONNECT_API_KEY_PATH: to_be_extended
+  before_script:
+    - cd $PROJECT_DIR
+    - bundle install
+    - echo $APP_STORE_CONNECT_API_KEY_BASE64 | base64 -d > $APP_STORE_CONNECT_API_KEY_PATH
+
+#########################################
+# PRE ANDROID
+#########################################
+pre:android:
+  extends: .base-android
+  stage: .pre
+  variables:
+    # Needed JDK 8:
+    # 'Caused by: java.lang.ClassNotFoundException: javax.xml.bind.annotation.XmlSchema' with jdk > 8
+    JDK_VERSION: 8.0.332-zulu
+  script:
+    - fastlane run validate_play_store_json_key json_key:$JK_PATH
+    - sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" >/dev/null
+    - sdkmanager "platform-tools" >/dev/null
+    - sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}" >/dev/null
+    - set +o pipefail
+    - yes | sdkmanager --licenses
+    - set -o pipefail
+    - echo "Installed Android SDK ${ANDROID_COMPILE_SDK}-${ANDROID_BUILD_TOOLS}-${ANDROID_SDK_TOOLS}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
