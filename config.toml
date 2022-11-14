@@ -1,0 +1,18 @@
+concurrent = 3
+check_interval = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "macos-runner"
+  url = "https://gitlab.com/"
+  token = "MY-SECRET-TOKEN"
+  executor = "shell"
+  [runners.cache]
+    Type = "gcs"
+    Shared = true
+    [runners.cache.gcs]
+      BucketName = "gitlabcom-xxxxxx-shared-cache"
+      AccessID = "xxxx@xxxx.iam.gserviceaccount.com"
+      PrivateKey = "-----BEGIN PRIVATE KEY-----\nXXXX\n-----END PRIVATE KEY-----\n"
