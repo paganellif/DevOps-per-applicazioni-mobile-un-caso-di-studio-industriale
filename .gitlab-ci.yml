@@ -1,0 +1,7 @@
+include:
+  - project: path/to/my/template/repo
+    file:
+      - '/kmm-templates/kmm-base.yml'
+      - '/kmm-templates/kmm-build.yml'
+      - '/kmm-templates/kmm-test.yml'
+      - '/kmm-templates/kmm-release.yml'
