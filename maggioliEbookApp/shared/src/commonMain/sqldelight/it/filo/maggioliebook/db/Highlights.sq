@@ -1,0 +1,41 @@
+CREATE TABLE highlights(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_date INTEGER,
+    isbn TEXT NOT NULL,
+    style TEXT NOT NULL,
+    tint INTEGER AS Int NOT NULL,
+    href TEXT NOT NULL,
+    type TEXT NOT NULL,
+    title TEXT,
+    total_progression REAL NOT NULL,
+    location TEXT NOT NULL,
+    text TEXT NOT NULL,
+    annotation TEXT NOT NULL
+);
+
+insert:
+    INSERT OR REPLACE INTO highlights(
+        id, created_date, isbn, style, tint, href, type,
+        title, total_progression, location, text,
+        annotation
+    )
+    VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?);
+
+select:
+    SELECT * FROM highlights WHERE id = ?;
+
+selectByIsbn:
+    SELECT * FROM highlights WHERE isbn = ? ORDER BY total_progression ASC;
+
+selectAll:
+    SELECT * FROM highlights;
+
+remove:
+    DELETE FROM highlights WHERE id = ?;
+
+removeByIsbn:
+    DELETE FROM highlights WHERE isbn = ?;
+
+clear:
+    DELETE FROM highlights;
+

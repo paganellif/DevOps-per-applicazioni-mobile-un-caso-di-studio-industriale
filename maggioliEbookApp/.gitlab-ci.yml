@@ -1,0 +1,32 @@
+include:
+  - project: maggiolispa/ricerca-sviluppo/ebook-app-poc/kmm-cicd-template
+    file:
+      - '/kmm-templates/kmm-base.yml'
+      - '/kmm-templates/kmm-build.yml'
+      - '/kmm-templates/kmm-test.yml'
+      - '/kmm-templates/kmm-analysis.yml'
+      - '/kmm-templates/kmm-release.yml'
+  - '/androidMaggioliEbookApp/.gitlab-ci.yml'
+  - '/iosMaggioliEbookApp/.gitlab-ci.yml'
+  - '/shared/.gitlab-ci.yml'
+
+default:
+  tags:
+    - macos-m1
+
+# BASE JOBS
+.base-android:
+  variables:
+    JDK_VERSION: 17.0.3-zulu
+    RELEASE_KEY_JKS_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/my-release-key.jks
+    JK_PATH: ${CI_PROJECT_DIR}/jk.json
+    ANDROID_COMPILE_SDK: "28"
+    ANDROID_BUILD_TOOLS: "28.0.2"
+    ANDROID_SDK_TOOLS: "4333796"
+
+.base-ios:
+  variables:
+    PROJECT_DIR: iosMaggioliEbookApp
+    GYM_WORKSPACE: ./iosMaggioliEbookApp.xcworkspace
+    GYM_SCHEME: iosMaggioliEbookApp
+    APP_STORE_CONNECT_API_KEY_PATH: app_store_connect_flkey.json

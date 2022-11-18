@@ -1,0 +1,38 @@
+CREATE TABLE bookmark(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_date INTEGER,
+    isbn TEXT NOT NULL,
+    publication_id TEXT NOT NULL,
+    resource_index INTEGER NOT NULL,
+    resource_href TEXT NOT NULL,
+    resource_type TEXT NOT NULL,
+    resource_title TEXT NOT NULL,
+    location TEXT NOT NULL,
+    locator_text TEXT NOT NULL
+);
+
+insert:
+    INSERT OR REPLACE INTO bookmark(
+        id, created_date, isbn, publication_id, resource_index, resource_href, resource_type,
+        resource_title, location, locator_text
+    )
+    VALUES (?,?,?,?, ?,?,?,?,?,?);
+
+select:
+    SELECT * FROM bookmark WHERE id = ?;
+
+selectByIsbn:
+    SELECT * FROM bookmark WHERE isbn = ?;
+
+selectAll:
+    SELECT * FROM bookmark;
+
+remove:
+    DELETE FROM bookmark WHERE id = ?;
+
+removeByIsbn:
+    DELETE FROM bookmark WHERE isbn = ?;
+
+clear:
+    DELETE FROM bookmark;
+

@@ -1,0 +1,21 @@
+CREATE TABLE progression(
+    isbn TEXT PRIMARY KEY NOT NULL,
+    progression TEXT NOT NULL
+);
+
+insert:
+    INSERT OR REPLACE INTO progression(isbn, progression)
+    VALUES (?, ?);
+
+select:
+    SELECT * FROM progression WHERE isbn = ?;
+
+selectAll:
+    SELECT * FROM progression;
+
+remove:
+    DELETE FROM progression WHERE isbn = ?;
+
+clear:
+    DELETE FROM progression;
+

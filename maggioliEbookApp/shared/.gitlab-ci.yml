@@ -1,0 +1,62 @@
+# BUILD
+shared:build:
+  extends: .shared:build
+  needs: [pre:android]
+  variables:
+    PROJECT_DIR: shared
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
+      changes: ["build.gradle.kts", "androidMaggioliEbookApp/**/*", "iosMaggioliEbookApp/**/*", "shared/**/*"]
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+
+# TEST
+shared:unit:test:
+  extends: .shared:unit:test
+  #needs: [shared:build, ios:build, android:build]
+  needs: [shared:build]
+  dependencies: [shared:build]
+  variables:
+    PROJECT_DIR: shared
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
+      changes: ["androidMaggioliEbookApp/**/*", "iosMaggioliEbookApp/**/*", "shared/**/*"]
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+
+# ANALYSIS
+shared-dependency-check:
+  extends: .dependency-check
+  variables:
+    PROJECT_DIR: shared
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "shared/**/*" ]
+    #  when: never
+
+shared-static-analysis:
+  extends: .static-analysis:android
+  variables:
+    PROJECT_DIR: shared
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "shared/**/*" ]
+    #  when: never
+
+shared-sonar-qube:
+  extends: .sonar-qube
+  needs: [shared-static-analysis, shared-dependency-check, shared:build, shared:unit:test]
+  dependencies: [shared:build, shared-static-analysis, shared-dependency-check, shared:unit:test]
+  variables:
+    PROJECT_DIR: shared
+    CI_SONAR_LOGIN: ${SONAR_SHARED_LOGIN}
+    SONAR_PROJECT_KEY: ${SONAR_SHARED_PROJECT_KEY}
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "shared/**/*" ]
+    #  when: never

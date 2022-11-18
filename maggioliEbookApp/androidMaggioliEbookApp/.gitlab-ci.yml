@@ -1,0 +1,130 @@
+# BUILD
+android:build:
+  needs: [shared:build]
+  dependencies: [shared:build]
+  extends: .android:build
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
+      changes: ["build.gradle.kts", "androidMaggioliEbookApp/**/*", "shared/**/*"]
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+
+# TEST
+android:unit:test:
+  extends: .android:unit:test
+  #needs: [shared:build, ios:build, android:build]
+  needs: [shared:build, android:build]
+  dependencies: [shared:build]
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+    AVD: "Pixel_3a_API_31"
+    UNIT_TEST_PACKAGE: it.filo.maggioliebook.android.unit
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
+      changes: ["androidMaggioliEbookApp/**/*", "shared/**/*"]
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+
+# TEST:UI
+android:ui:test:phone:
+  extends: .android:ui:test:phone
+  needs: [android:build, shared:build, shared:unit:test, android:unit:test]
+  dependencies: [android:build, shared:build]
+  variables:
+    AVD: "Pixel_3a_API_31"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: "it.filo.maggioliebook.android.screengrab.PhoneScreenshotTest"
+    PROJECT_DIR: androidMaggioliEbookApp
+    SCREENGRAB_APP_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/debug/androidMaggioliEbookApp-debug.apk
+    SCREENGRAB_TESTS_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/androidTest/debug/androidMaggioliEbookApp-debug-androidTest.apk
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || ($CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "web")
+      changes: [ "androidMaggioliEbookApp/**/*", "shared/**/*" ]
+
+android:ui:test:seveninch:
+  extends: .android:ui:test:seveninch
+  needs: [android:build, shared:build, android:ui:test:phone]
+  dependencies: [android:build, shared:build]
+  variables:
+    AVD: "Nexus_7_2012_API_31"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: "it.filo.maggioliebook.android.screengrab.TabletSevenInchScreenshotTest"
+    PROJECT_DIR: androidMaggioliEbookApp
+    SCREENGRAB_APP_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/debug/androidMaggioliEbookApp-debug.apk
+    SCREENGRAB_TESTS_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/androidTest/debug/androidMaggioliEbookApp-debug-androidTest.apk
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || ($CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "web")
+      changes: [ "androidMaggioliEbookApp/**/*", "shared/**/*" ]
+
+android:ui:test:teninch:
+  extends: .android:ui:test:teninch
+  needs: [android:build, shared:build, android:ui:test:seveninch]
+  dependencies: [android:build, shared:build]
+  variables:
+    AVD: "Nexus_10_API_31"
+    SCREENGRAB_USE_TESTS_IN_CLASSES: "it.filo.maggioliebook.android.screengrab.TabletTenInchScreenshotTest"
+    PROJECT_DIR: androidMaggioliEbookApp
+    SCREENGRAB_APP_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/debug/androidMaggioliEbookApp-debug.apk
+    SCREENGRAB_TESTS_APK_PATH: ${CI_PROJECT_DIR}/androidMaggioliEbookApp/build/outputs/apk/androidTest/debug/androidMaggioliEbookApp-debug-androidTest.apk
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || ($CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "web")
+      changes: [ "androidMaggioliEbookApp/**/*", "shared/**/*" ]
+
+# ANALYSIS
+android-dependency-check:
+  extends: .dependency-check
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "androidMaggioliEbookApp/**/*"]
+    #  when: never
+
+android-static-analysis:
+  extends: .static-analysis:android
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "androidMaggioliEbookApp/**/*"]
+    #  when: never
+
+android-sonar-qube:
+  extends: .sonar-qube
+  needs: [android-static-analysis, android-dependency-check, android:build, shared:unit:test]
+  dependencies: [android:build, android-static-analysis, android-dependency-check]
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+    CI_SONAR_LOGIN: ${SONAR_ANDROID_LOGIN}
+    SONAR_PROJECT_KEY: ${SONAR_ANDROID_PROJECT_KEY}
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+    #- if: $CI_COMMIT_BRANCH == "dev"
+    #  changes: [ "androidMaggioliEbookApp/**/*"]
+    #  when: never
+
+# RELEASE
+android:release:alpha:
+  extends: .android:release:alpha
+  needs: [android:build, android:ui:test:phone, android:ui:test:seveninch, android:ui:test:teninch]
+  dependencies: [android:ui:test:phone, android:ui:test:seveninch, android:ui:test:teninch]
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+    SUPPLY_AAB: ./build/outputs/bundle/release/androidMaggioliEbookApp-release.aab
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "schedule" && $CI_PIPELINE_SOURCE != "web"
+      changes: [ "androidMaggioliEbookApp/build.gradle.kts" ]
+      when: manual
+
+android:release:beta:
+  extends: .android:release:beta
+  variables:
+    PROJECT_DIR: androidMaggioliEbookApp
+  rules:
+    - if: $CI_COMMIT_BRANCH == "test" && $CI_PIPELINE_SOURCE != "schedule" && $CI_PIPELINE_SOURCE != "web"
+      changes: [ "androidMaggioliEbookApp/build.gradle.kts" ]
+      when: manual

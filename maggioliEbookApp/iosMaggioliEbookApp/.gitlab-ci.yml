@@ -1,0 +1,79 @@
+# BUILD
+ios:build:
+  needs: [shared:build]
+  dependencies: [shared:build]
+  extends: .ios:build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "dev"
+      changes: ["build.gradle.kts", "iosMaggioliEbookApp/**/*", "shared/**/*"]
+
+# TEST TODO
+
+# TEST:UI
+ios:ui:test:
+  extends: .ios:ui:test
+  needs: [ios:build, shared:build, shared:unit:test]
+  dependencies: [ios:build, shared:build]
+  variables:
+    DEVICES: "iPhone 14 Pro,iPad Pro (12.9-inch) (5th generation),iPad mini (6th generation)"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || ($CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "web")
+      changes: [ "iosMaggioliEbookApp/**/*", "shared/**/*" ]
+
+# ANALYSIS
+ios-dependency-check:
+  extends: .dependency-check
+  variables:
+    PROJECT_DIR: iosMaggioliEbookApp
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      changes: [ "iosMaggioliEbookApp/**/*"]
+      when: never
+
+ios-static-analysis:
+  extends: .static-analysis:ios
+  variables:
+    PROJECT_DIR: iosMaggioliEbookApp
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      changes: [ "iosMaggioliEbookApp/**/*"]
+      when: never
+
+ios-sonar-qube:
+  extends: .sonar-qube
+  needs: [ios:build, ios-static-analysis, ios-dependency-check, shared:build, ios:ui:test, shared:unit:test]
+  dependencies: [ios:build, shared:build, ios-static-analysis, ios-dependency-check]
+  variables:
+    PROJECT_DIR: iosMaggioliEbookApp
+    CI_SONAR_LOGIN: ${SONAR_IOS_LOGIN}
+    SONAR_PROJECT_KEY: ${SONAR_IOS_PROJECT_KEY}
+  tags:
+    - rd-k8s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      changes: [ "iosMaggioliEbookApp/**/*" ]
+      when: never
+
+# RELEASE
+ios:release:alpha:
+  extends: .ios:release:alpha
+  needs: [ios:build, shared:build, ios:ui:test]
+  dependencies: [ios:build, shared:build]
+  variables:
+    PILOT_IPA: "./MaggioliEbook.ipa"
+    PILOT_GROUPS: "Maggioli-Internal"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE != "schedule" && $CI_PIPELINE_SOURCE != "web"
+      changes: [ "iosMaggioliEbookApp/iosMaggioliEbookApp/Info.plist" ]
+      when: manual
+
+ios:release:beta:
+  extends: .ios:release:beta
+  variables:
+    PILOT_GROUPS: "Maggioli-External"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "test" && $CI_PIPELINE_SOURCE != "schedule" && $CI_PIPELINE_SOURCE != "web"
+      changes: [ "iosMaggioliEbookApp/iosMaggioliEbookApp/Info.plist" ]
+      when: manual

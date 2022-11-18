@@ -1,0 +1,20 @@
+CREATE TABLE favoriteBooks(
+    isbn TEXT PRIMARY KEY NOT NULL
+);
+
+insert:
+    INSERT OR REPLACE INTO favoriteBooks(isbn)
+    VALUES (?);
+
+select:
+    SELECT * FROM favoriteBooks WHERE isbn = ?;
+
+selectAll:
+    SELECT * FROM favoriteBooks;
+
+remove:
+    DELETE FROM favoriteBooks WHERE isbn = ?;
+
+clear:
+    DELETE FROM favoriteBooks;
+
