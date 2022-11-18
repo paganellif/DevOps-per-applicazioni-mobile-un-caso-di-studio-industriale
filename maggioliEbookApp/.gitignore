@@ -1,8 +1,9 @@
+!shared/build/generated/**/*
+
 **/.DS_Store
 .gradle
 /local.properties
 /build
-*/build
 /captures
 .externalNativeBuild
 .cxx
