@@ -79,7 +79,7 @@
     PROJECT_DIR: to_be_extended
     SONAR_USER_HOME: ${CI_PROJECT_DIR}/${PROJECT_DIR}/.sonar
     SONAR_PROJECT_KEY: to_be_extended
-    GIT_DEPTH: "0"
+    GIT_DEPTH: "1"
   script:
     - cd $PROJECT_DIR
     - sonar-scanner -Dsonar.login=$CI_SONAR_LOGIN -Dsonar.host.url=$CI_SONAR_HOST -Dsonar.projectKey=$SONAR_PROJECT_KEY
