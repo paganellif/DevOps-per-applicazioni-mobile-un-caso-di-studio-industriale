@@ -13,7 +13,7 @@
     PROJECT_DIR: to_be_extended
     REPORT_PATH: ${CI_PROJECT_DIR}/reports
   script:
-    - /usr/share/dependency-check/bin/dependency-check.sh --format="${REPORT_FORMAT}" --scan="${PROJECT_DIR}" -o="${REPORT_PATH}"
+    - /usr/share/dependency-check/bin/dependency-check.sh --format="${REPORT_FORMAT}" --format="HTML" --scan="${PROJECT_DIR}" -o="${REPORT_PATH}"
   artifacts:
     name: dependency-check-report
     expire_in: 1 day
