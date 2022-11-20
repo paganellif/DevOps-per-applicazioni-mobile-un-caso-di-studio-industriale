@@ -28,18 +28,14 @@ ios-dependency-check:
   tags:
     - rd-k8s
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
-      changes: [ "iosMaggioliEbookApp/**/*"]
-      when: never
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
 
 ios-static-analysis:
   extends: .static-analysis:ios
   variables:
     PROJECT_DIR: iosMaggioliEbookApp
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
-      changes: [ "iosMaggioliEbookApp/**/*"]
-      when: never
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
 
 ios-sonar-qube:
   extends: .sonar-qube
@@ -52,9 +48,7 @@ ios-sonar-qube:
   tags:
     - rd-k8s
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
-      changes: [ "iosMaggioliEbookApp/**/*" ]
-      when: never
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
 
 # RELEASE
 ios:release:alpha:
