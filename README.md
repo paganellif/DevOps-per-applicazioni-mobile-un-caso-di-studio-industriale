@@ -15,3 +15,9 @@
 ### Capitolo 7 - Risultati raggiunti 
 
 ### Capitolo 8 - Conclusioni
+
+---
+
+Report: [https://github.com/paganellif/tesi-paganelli/releases](https://github.com/paganellif/tesi-paganelli/releases)
+
+Slides: [https://github.com/paganellif/tesi-slides-paganelli/releases](https://github.com/paganellif/tesi-slides-paganelli/releases) 
